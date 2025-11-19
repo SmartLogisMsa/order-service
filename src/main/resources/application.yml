@@ -10,6 +10,16 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
   config:
     import: 'optional:configserver:'
   cloud:
