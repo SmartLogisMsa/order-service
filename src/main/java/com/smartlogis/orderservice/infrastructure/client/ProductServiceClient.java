@@ -11,5 +11,5 @@ import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckRespo
 public interface ProductServiceClient {
 
 	@PostMapping("/v1/products/inventory/check")
-	InventoryCheckResponse checkInventoriesBatch(@RequestBody InventoryCheckRequest request);
+	InventoryCheckResponse checkInventories(@RequestBody InventoryCheckRequest request);
 }
