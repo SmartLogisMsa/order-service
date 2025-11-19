@@ -1,6 +1,5 @@
 package com.smartlogis.orderservice.domain.event;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -44,8 +43,7 @@ public class OrderCreatedEvent {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	public static class OrderItemDetail implements Serializable {
-		private static final long serialVersionUID = 1L;
+	public static class OrderItemDetail {
 		private UUID productId;
 		private Integer quantity;
 	}
