@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.domain.order.entity;
+package com.smartlogis.orderservice.domain.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.smartlogis.common.domain.AbstractEntity;
-import com.smartlogis.orderservice.domain.order.exception.InvalidOrderItemException;
-import com.smartlogis.orderservice.domain.order.exception.OrderMessageCode;
+import com.smartlogis.orderservice.domain.exception.InvalidOrderItemException;
+import com.smartlogis.orderservice.domain.exception.OrderMessageCode;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

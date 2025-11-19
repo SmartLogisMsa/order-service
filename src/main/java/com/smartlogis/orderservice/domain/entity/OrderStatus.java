@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.domain.order.entity;
+package com.smartlogis.orderservice.domain.entity;
 
 public enum OrderStatus {
 	CREATED("접수됨"),

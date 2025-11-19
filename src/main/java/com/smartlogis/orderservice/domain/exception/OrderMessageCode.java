@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.domain.order.exception;
+package com.smartlogis.orderservice.domain.exception;
 
 import org.springframework.http.HttpStatus;
 
