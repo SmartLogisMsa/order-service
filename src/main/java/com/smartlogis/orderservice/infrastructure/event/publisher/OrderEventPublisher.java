@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.infrastructure.publisher.event;
+package com.smartlogis.orderservice.infrastructure.event.publisher;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
