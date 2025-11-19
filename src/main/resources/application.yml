@@ -12,7 +12,7 @@ spring:
     show-sql: false
   rabbitmq:
     host: rabbitmq.code-factory.co.kr
-    port: 5672
+    port: 3080
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
     virtual-host: /
