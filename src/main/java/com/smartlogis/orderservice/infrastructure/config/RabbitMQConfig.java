@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-	public static final String ORDER_CREATED_QUEUE = "order.created.queue";
-	public static final String ORDER_CREATED_EXCHANGE = "order.exchange";
-	public static final String ORDER_CREATED_ROUTING_KEY = "order.created";
+	public static final String ORDER_CREATED_QUEUE = "smartlogis.order.created.queue";
+	public static final String ORDER_CREATED_EXCHANGE = "smartlogis.order.exchange";
+	public static final String ORDER_CREATED_ROUTING_KEY = "smartlogis.order.created";
 
 	@Bean
 	public Queue orderCreatedQueue() {
