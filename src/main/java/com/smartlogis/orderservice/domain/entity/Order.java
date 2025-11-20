@@ -57,7 +57,7 @@ public class Order extends AbstractEntity {
 		}
 		Order order = new Order();
 		order.id = UUID.randomUUID();
-		order.status = OrderStatus.CREATED;
+		order.status = OrderStatus.PENDING;
 		order.receiptCompanyId = receiptCompanyId;
 		order.requestDetails = requestDetails;
 		order.orderItems = new ArrayList<>(orderItems);
