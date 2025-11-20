@@ -14,10 +14,18 @@ public class RabbitMQConfig {
 	public static final String ORDER_CREATED_QUEUE = "smartlogis.order.created.queue";
 	public static final String ORDER_CREATED_EXCHANGE = "smartlogis.order.exchange";
 	public static final String ORDER_CREATED_ROUTING_KEY = "smartlogis.order.created";
+	public static final String ORDER_CANCELED_QUEUE = "smartlogis.order.canceled.queue";
+	public static final String ORDER_CANCELED_EXCHANGE = "smartlogis.order.exchange";
+	public static final String ORDER_CANCELED_ROUTING_KEY = "smartlogis.order.canceled";
 
 	@Bean
 	public Queue orderCreatedQueue() {
 		return new Queue(ORDER_CREATED_QUEUE, true);
+	}
+
+	@Bean
+	public Queue orderCanceledQueue() {
+		return new Queue(ORDER_CANCELED_QUEUE, true);
 	}
 
 	@Bean
@@ -30,6 +38,13 @@ public class RabbitMQConfig {
 		return BindingBuilder.bind(orderCreatedQueue)
 			.to(orderExchange)
 			.with(ORDER_CREATED_ROUTING_KEY);
+	}
+
+	@Bean
+	public Binding orderCanceledBinding(Queue orderCanceledQueue, TopicExchange orderExchange) {
+		return BindingBuilder.bind(orderCanceledQueue)
+			.to(orderExchange)
+			.with(ORDER_CANCELED_ROUTING_KEY);
 	}
 
 	@Bean
