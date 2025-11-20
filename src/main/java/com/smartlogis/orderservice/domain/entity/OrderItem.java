@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.domain.order.entity;
+package com.smartlogis.orderservice.domain.entity;
 
 import java.util.UUID;
 

@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.domain.order.repository;
+package com.smartlogis.orderservice.domain.repository;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -7,8 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.smartlogis.orderservice.domain.order.entity.Order;
-import com.smartlogis.orderservice.domain.order.entity.OrderStatus;
+import com.smartlogis.orderservice.domain.entity.Order;
+import com.smartlogis.orderservice.domain.entity.OrderStatus;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 	Optional<Order> findByIdAndDeletedAtIsNull(UUID id);

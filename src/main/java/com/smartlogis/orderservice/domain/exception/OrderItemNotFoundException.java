@@ -1,4 +1,4 @@
-package com.smartlogis.orderservice.domain.order.exception;
+package com.smartlogis.orderservice.domain.exception;
 
 import com.smartlogis.common.exception.AbstractException;
 

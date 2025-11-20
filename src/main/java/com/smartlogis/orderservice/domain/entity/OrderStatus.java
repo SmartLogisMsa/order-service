@@ -1,8 +1,10 @@
-package com.smartlogis.orderservice.domain.order.entity;
+package com.smartlogis.orderservice.domain.entity;
 
 public enum OrderStatus {
-	CREATED("접수됨"),
-	CANCELED("취소됨");
+	PENDING("접수됨"),
+	CANCELED("취소됨"),
+	SHIPPED("배송중"),
+	DELIVERED("배송완료");
 
 	private final String description;
 
