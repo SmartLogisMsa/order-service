@@ -2,7 +2,7 @@ spring:
   application:
     name: order-service
   datasource:
-    url: jdbc:mysql://localhost:3306/smartlogis_order
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,8 +11,8 @@ spring:
       ddl-auto: update
     show-sql: false
   rabbitmq:
-    host: rabbitmq.code-factory.co.kr
-    port: 3080
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
     virtual-host: /
@@ -21,20 +21,20 @@ spring:
     serialization:
       write-dates-as-timestamps: false
   config:
-    import: 'optional:configserver:'
+    import: 'optional:configserver:${CONFIG_SERVER_URL}'
   cloud:
     config:
       discovery:
         enabled: true
         service-id: config-server
+      uri: ${CONFIG_SERVER_URL}
 
 eureka:
   instance:
     prefer-ip-address: false
-    hostname: code-factory.co.kr
 
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://${eureka.instance.hostname}:3150/eureka/
+      defaultZone: ${EUREKA_SERVER_URL}
