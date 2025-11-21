@@ -3,9 +3,14 @@ package com.smartlogis.orderservice.application.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartlogis.common.presentation.dto.PageRequest;
+import com.smartlogis.common.presentation.dto.PageResponse;
 import com.smartlogis.orderservice.domain.entity.Order;
 import com.smartlogis.orderservice.domain.entity.OrderItem;
 import com.smartlogis.orderservice.domain.event.OrderCanceledEvent;
@@ -78,5 +83,43 @@ public class OrderService {
 		orderEventPublisher.publishOrderCanceled(event);
 
 		return OrderResponse.from(savedOrder);
+	}
+
+	@Transactional
+	public OrderResponse deleteOrder(UUID orderId) {
+		Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
+			.orElseThrow(() -> new OrderNotFoundException(OrderMessageCode.ORDER_NOT_FOUND));
+
+		order.delete();
+
+		Order savedOrder = orderRepository.save(order);
+
+		return OrderResponse.from(savedOrder);
+	}
+
+	@Transactional(readOnly = true)
+	public OrderResponse getOrder(UUID orderId) {
+		Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
+			.orElseThrow(() -> new OrderNotFoundException(OrderMessageCode.ORDER_NOT_FOUND));
+
+		return OrderResponse.from(order);
+	}
+
+	@Transactional(readOnly = true)
+	public PageResponse<OrderResponse> getOrderByCompany(UUID receiptCompanyId, PageRequest pageRequest) {
+		Sort.Direction direction = Sort.Direction.fromString(
+			pageRequest.getDirection() != null ? pageRequest.getDirection() : "DESC"
+		);
+		String sortBy = pageRequest.getSortBy() != null ? pageRequest.getSortBy() : "createdAt";
+
+		Pageable pageable = org.springframework.data.domain.PageRequest.of(
+			pageRequest.getPage(),
+			pageRequest.getSize(),
+			Sort.by(direction, sortBy)
+		);
+
+		Page<Order> orders = orderRepository.findByReceiptCompanyIdAndDeletedAtIsNull(receiptCompanyId, pageable);
+
+		return PageResponse.from(orders.map(OrderResponse::from));
 	}
 }
