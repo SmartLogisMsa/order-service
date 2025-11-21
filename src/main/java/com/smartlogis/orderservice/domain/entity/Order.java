@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.smartlogis.common.domain.AbstractEntity;
 import com.smartlogis.orderservice.domain.exception.InvalidOrderItemException;
+import com.smartlogis.orderservice.domain.exception.OrderCannotBeCanceledException;
 import com.smartlogis.orderservice.domain.exception.OrderMessageCode;
 
 import jakarta.persistence.CascadeType;
@@ -66,6 +67,11 @@ public class Order extends AbstractEntity {
 	}
 
 	public void cancel() {
+		if (this.status == OrderStatus.SHIPPED ||
+			this.status == OrderStatus.DELIVERED ||
+			this.status == OrderStatus.CANCELED) {
+			throw new OrderCannotBeCanceledException(OrderMessageCode.ORDER_CANCEL_FAILED);
+		}
 		this.status = OrderStatus.CANCELED;
 	}
 

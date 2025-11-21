@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartlogis.orderservice.TestMessageResolver;
 import com.smartlogis.orderservice.application.service.OrderService;
 import com.smartlogis.orderservice.interfaces.dto.request.CreateOrderRequest;
 import com.smartlogis.orderservice.interfaces.dto.request.OrderItemRequest;
@@ -48,6 +49,8 @@ class OrderControllerTest {
 
 	@BeforeEach
 	void setUp() {
+		TestMessageResolver.initializeMessageResource();
+
 		UUID receiptCompanyId = UUID.randomUUID();
 		UUID productId1 = UUID.randomUUID();
 		UUID productId2 = UUID.randomUUID();
@@ -137,5 +140,34 @@ class OrderControllerTest {
 
 		then(orderService).should(never())
 			.createOrder(any(CreateOrderRequest.class));
+	}
+
+	@Test
+	@DisplayName("정상적인 주문 취소 요청 시 200 OK 반환")
+	void cancelOrder_Success() throws Exception {
+		// given
+		UUID orderId = UUID.randomUUID();
+		UUID receiptCompanyId = UUID.randomUUID();
+
+		OrderResponse cancelResponse = OrderResponse.builder()
+			.id(orderId)
+			.receiptCompanyId(receiptCompanyId)
+			.requestDetails("긴급 배송 요청")
+			.orderItems(List.of())
+			.build();
+
+		given(orderService.cancelOrder(any(UUID.class)))
+			.willReturn(cancelResponse);
+
+		// when & then
+		mockMvc.perform(delete("/v1/orders/{orderId}", orderId))
+			.andDo(print())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.id").value(orderId.toString()))
+			.andExpect(jsonPath("$.data.receiptCompanyId").value(receiptCompanyId.toString()))
+			.andExpect(jsonPath("$.data.requestDetails").value("긴급 배송 요청"));
+
+		then(orderService).should(times(1))
+			.cancelOrder(any(UUID.class));
 	}
 }
