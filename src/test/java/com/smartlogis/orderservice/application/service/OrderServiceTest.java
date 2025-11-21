@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.smartlogis.common.presentation.dto.PageRequest;
 import com.smartlogis.common.presentation.dto.PageResponse;
 import com.smartlogis.orderservice.TestMessageResolver;
 import com.smartlogis.orderservice.domain.entity.Order;
@@ -320,15 +321,19 @@ class OrderServiceTest {
 			OrderItem.create(null, productId2, 5)
 		));
 
-		Page<Order> mockPage = new PageImpl<>(List.of(order1, order2));
+		Page<Order> mockPage = new PageImpl<>(
+			List.of(order1, order2),
+			org.springframework.data.domain.PageRequest.of(0, 10),
+			2
+		);
 
 		given(orderRepository.findByReceiptCompanyIdAndDeletedAtIsNull(
 			eq(companyId),
 			any(Pageable.class)))
 			.willReturn(mockPage);
 
-		com.smartlogis.common.presentation.dto.PageRequest pageRequest =
-			new com.smartlogis.common.presentation.dto.PageRequest(0, 10, "createdAt", "DESC");
+		PageRequest pageRequest =
+			new PageRequest(0, 10, "createdAt", "DESC");
 
 		// when
 		PageResponse<OrderResponse> response = orderService.getOrdersByCompany(companyId, pageRequest);
@@ -356,8 +361,8 @@ class OrderServiceTest {
 			any(Pageable.class)))
 			.willReturn(emptyPage);
 
-		com.smartlogis.common.presentation.dto.PageRequest pageRequest =
-			new com.smartlogis.common.presentation.dto.PageRequest(0, 10, "createdAt", "DESC");
+		PageRequest pageRequest =
+			new PageRequest(0, 10, "createdAt", "DESC");
 
 		// when
 		PageResponse<OrderResponse> response = orderService.getOrdersByCompany(companyId, pageRequest);
