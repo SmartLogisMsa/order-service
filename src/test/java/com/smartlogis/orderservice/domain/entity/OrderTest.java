@@ -3,6 +3,7 @@ package com.smartlogis.orderservice.domain.entity;
 import static org.assertj.core.api.Assertions.*;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,6 +77,36 @@ class OrderTest {
 		// when & then
 		assertThatThrownBy(() -> order.cancel())
 			.isInstanceOf(OrderCannotBeCanceledException.class);
+	}
+
+	@Test
+	@DisplayName("주문을 논리적 삭제할 수 있다")
+	void delete_Success() {
+		// given
+		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+
+		// when
+		order.delete();
+
+		// then
+		assertThat(order.getDeletedAt()).isNotNull();
+		assertThat(order.getDeletedBy()).isNotNull();
+	}
+
+	@Test
+	@DisplayName("삭제된 주문은 deletedAt과 deletedBy가 설정된다")
+	void delete_SetsDeletedAtAndDeletedBy() {
+		// given
+		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		LocalDateTime beforeDelete = LocalDateTime.now();
+
+		// when
+		order.delete();
+
+		// then
+		assertThat(order.getDeletedAt()).isNotNull();
+		assertThat(order.getDeletedAt()).isAfterOrEqualTo(beforeDelete);
+		assertThat(order.getDeletedBy()).isNotNull();
 	}
 
 	private void setOrderStatus(Order order, OrderStatus status) {
