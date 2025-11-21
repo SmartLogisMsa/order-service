@@ -15,7 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
+import com.smartlogis.common.presentation.dto.PageRequest;
+import com.smartlogis.common.presentation.dto.PageResponse;
 import com.smartlogis.orderservice.TestMessageResolver;
 import com.smartlogis.orderservice.domain.entity.Order;
 import com.smartlogis.orderservice.domain.entity.OrderItem;
@@ -211,6 +216,161 @@ class OrderServiceTest {
 			.save(any(Order.class));
 		then(orderEventPublisher).should(never())
 			.publishOrderCanceled(any(OrderCanceledEvent.class));
+	}
+
+	@Test
+	@DisplayName("존재하는 주문을 논리적 삭제 성공")
+	void deleteOrder_Success_WhenOrderExists() {
+		// given
+		UUID orderId = UUID.randomUUID();
+		Order mockOrder = Order.create(receiptCompanyId, "테스트", List.of(
+			OrderItem.create(null, productId1, 10)
+		));
+
+		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+			.willReturn(Optional.of(mockOrder));
+
+		// when
+		orderService.deleteOrder(orderId);
+
+		// then
+		then(orderRepository).should(times(1))
+			.findByIdAndDeletedAtIsNull(orderId);
+		then(orderRepository).should(times(1))
+			.save(any(Order.class));
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 주문 삭제 시 OrderNotFoundException 발생")
+	void deleteOrder_ThrowsException_WhenOrderNotFound() {
+		// given
+		UUID orderId = UUID.randomUUID();
+
+		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+			.willReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> orderService.deleteOrder(orderId))
+			.isInstanceOf(OrderNotFoundException.class);
+
+		then(orderRepository).should(never())
+			.save(any(Order.class));
+	}
+
+	@Test
+	@DisplayName("이미 삭제된 주문 삭제 시 OrderNotFoundException 발생")
+	void deleteOrder_ThrowsException_WhenAlreadyDeleted() {
+		// given
+		UUID orderId = UUID.randomUUID();
+
+		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+			.willReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> orderService.deleteOrder(orderId))
+			.isInstanceOf(OrderNotFoundException.class);
+	}
+
+	@Test
+	@DisplayName("존재하는 주문 단건 조회 성공")
+	void getOrder_Success_WhenOrderExists() {
+		// given
+		UUID orderId = UUID.randomUUID();
+		Order mockOrder = Order.create(receiptCompanyId, "테스트", List.of(
+			OrderItem.create(null, productId1, 10)
+		));
+
+		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+			.willReturn(Optional.of(mockOrder));
+
+		// when
+		OrderResponse response = orderService.getOrder(orderId);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.getReceiptCompanyId()).isEqualTo(receiptCompanyId);
+
+		then(orderRepository).should(times(1))
+			.findByIdAndDeletedAtIsNull(orderId);
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 주문 조회 시 OrderNotFoundException 발생")
+	void getOrder_ThrowsException_WhenOrderNotFound() {
+		// given
+		UUID orderId = UUID.randomUUID();
+
+		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
+			.willReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> orderService.getOrder(orderId))
+			.isInstanceOf(OrderNotFoundException.class);
+	}
+
+	@Test
+	@DisplayName("업체별 주문 목록 조회 성공")
+	void getOrdersByCompany_Success() {
+		// given
+		UUID companyId = UUID.randomUUID();
+
+		Order order1 = Order.create(companyId, "주문1", List.of(
+			OrderItem.create(null, productId1, 10)
+		));
+		Order order2 = Order.create(companyId, "주문2", List.of(
+			OrderItem.create(null, productId2, 5)
+		));
+
+		Page<Order> mockPage = new PageImpl<>(
+			List.of(order1, order2),
+			org.springframework.data.domain.PageRequest.of(0, 10),
+			2
+		);
+
+		given(orderRepository.findByReceiptCompanyIdAndDeletedAtIsNull(
+			eq(companyId),
+			any(Pageable.class)))
+			.willReturn(mockPage);
+
+		PageRequest pageRequest =
+			new PageRequest(0, 10, "createdAt", "DESC");
+
+		// when
+		PageResponse<OrderResponse> response = orderService.getOrdersByCompany(companyId, pageRequest);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.content()).hasSize(2);
+		assertThat(response.page()).isEqualTo(0);
+		assertThat(response.size()).isEqualTo(10);
+		assertThat(response.total()).isEqualTo(2);
+
+		then(orderRepository).should(times(1))
+			.findByReceiptCompanyIdAndDeletedAtIsNull(eq(companyId), any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("업체에 주문이 없을 때 빈 리스트 반환")
+	void getOrdersByCompany_ReturnsEmptyList_WhenNoOrders() {
+		// given
+		UUID companyId = UUID.randomUUID();
+		Page<Order> emptyPage = new PageImpl<>(List.of());
+
+		given(orderRepository.findByReceiptCompanyIdAndDeletedAtIsNull(
+			eq(companyId),
+			any(Pageable.class)))
+			.willReturn(emptyPage);
+
+		PageRequest pageRequest =
+			new PageRequest(0, 10, "createdAt", "DESC");
+
+		// when
+		PageResponse<OrderResponse> response = orderService.getOrdersByCompany(companyId, pageRequest);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.content()).isEmpty();
+		assertThat(response.total()).isEqualTo(0);
 	}
 
 	private OrderItemRequest createOrderItemRequest(UUID productId, int quantity) {
