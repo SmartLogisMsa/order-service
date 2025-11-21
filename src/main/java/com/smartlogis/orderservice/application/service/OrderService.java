@@ -86,15 +86,13 @@ public class OrderService {
 	}
 
 	@Transactional
-	public OrderResponse deleteOrder(UUID orderId) {
+	public void deleteOrder(UUID orderId) {
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(orderId)
 			.orElseThrow(() -> new OrderNotFoundException(OrderMessageCode.ORDER_NOT_FOUND));
 
 		order.delete();
 
-		Order savedOrder = orderRepository.save(order);
-
-		return OrderResponse.from(savedOrder);
+		orderRepository.save(order);
 	}
 
 	@Transactional(readOnly = true)
@@ -106,7 +104,7 @@ public class OrderService {
 	}
 
 	@Transactional(readOnly = true)
-	public PageResponse<OrderResponse> getOrderByCompany(UUID receiptCompanyId, PageRequest pageRequest) {
+	public PageResponse<OrderResponse> getOrdersByCompany(UUID receiptCompanyId, PageRequest pageRequest) {
 		Sort.Direction direction = Sort.Direction.fromString(
 			pageRequest.getDirection() != null ? pageRequest.getDirection() : "DESC"
 		);
