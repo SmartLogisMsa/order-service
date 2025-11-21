@@ -3,7 +3,9 @@ package com.smartlogis.orderservice.application.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +18,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.smartlogis.orderservice.TestMessageResolver;
 import com.smartlogis.orderservice.domain.entity.Order;
+import com.smartlogis.orderservice.domain.entity.OrderItem;
+import com.smartlogis.orderservice.domain.entity.OrderStatus;
+import com.smartlogis.orderservice.domain.event.OrderCanceledEvent;
 import com.smartlogis.orderservice.domain.event.OrderCreatedEvent;
 import com.smartlogis.orderservice.domain.exception.InsufficientInventoryException;
+import com.smartlogis.orderservice.domain.exception.OrderCannotBeCanceledException;
+import com.smartlogis.orderservice.domain.exception.OrderNotFoundException;
 import com.smartlogis.orderservice.domain.repository.OrderRepository;
 import com.smartlogis.orderservice.infrastructure.client.ProductServiceClient;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckRequest;
@@ -111,6 +118,101 @@ class OrderServiceTest {
 		verifyOrderCreationFailed();
 	}
 
+	@Test
+	@DisplayName("PENDING 상태의 주문을 취소하면 OrderCanceledEvent 발행")
+	void cancelOrder_Success_WhenOrderExists() {
+		// given
+		UUID orderId = UUID.randomUUID();
+		Order mockOrder = Order.create(receiptCompanyId, "테스트", List.of(
+			OrderItem.create(null, productId1, 10)
+		));
+
+		given(orderRepository.findById(orderId))
+			.willReturn(Optional.of(mockOrder));
+
+		given(orderRepository.save(any(Order.class)))
+			.willAnswer(invocation -> invocation.getArgument(0));
+
+		// when
+		OrderResponse response = orderService.cancelOrder(orderId);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.getId()).isEqualTo(mockOrder.getId());
+
+		then(orderRepository).should(times(1))
+			.findById(orderId);
+		then(orderRepository).should(times(1))
+			.save(any(Order.class));
+		then(orderEventPublisher).should(times(1))
+			.publishOrderCanceled(any(OrderCanceledEvent.class));
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 주문 ID로 취소 시 OrderNotFoundException 발생")
+	void cancelOrder_ThrowsException_WhenOrderNotFound() {
+		// given
+		UUID orderId = UUID.randomUUID();
+
+		given(orderRepository.findById(orderId))
+			.willReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> orderService.cancelOrder(orderId))
+			.isInstanceOf(OrderNotFoundException.class);
+
+		then(orderRepository).should(never())
+			.save(any(Order.class));
+		then(orderEventPublisher).should(never())
+			.publishOrderCanceled(any(OrderCanceledEvent.class));
+	}
+
+	@Test
+	@DisplayName("SHIPPED 상태의 주문을 취소하면 OrderCannotBeCanceledException 발생")
+	void cancelOrder_ThrowsException_WhenOrderStatusIsShipped() {
+		// given
+		UUID orderId = UUID.randomUUID();
+		Order shippedOrder = Order.create(receiptCompanyId, "테스트", List.of(
+			OrderItem.create(null, productId1, 10)
+		));
+		setOrderStatus(shippedOrder, OrderStatus.SHIPPED);
+
+		given(orderRepository.findById(orderId))
+			.willReturn(Optional.of(shippedOrder));
+
+		// when & then
+		assertThatThrownBy(() -> orderService.cancelOrder(orderId))
+			.isInstanceOf(OrderCannotBeCanceledException.class);
+
+		then(orderRepository).should(never())
+			.save(any(Order.class));
+		then(orderEventPublisher).should(never())
+			.publishOrderCanceled(any(OrderCanceledEvent.class));
+	}
+
+	@Test
+	@DisplayName("DELIVERED 상태의 주문을 취소하면 OrderCannotBeCanceledException 발생")
+	void cancelOrder_ThrowsException_WhenOrderStatusIsDelivered() {
+		// given
+		UUID orderId = UUID.randomUUID();
+		Order shippedOrder = Order.create(receiptCompanyId, "테스트", List.of(
+			OrderItem.create(null, productId1, 10)
+		));
+		setOrderStatus(shippedOrder, OrderStatus.DELIVERED);
+
+		given(orderRepository.findById(orderId))
+			.willReturn(Optional.of(shippedOrder));
+
+		// when & then
+		assertThatThrownBy(() -> orderService.cancelOrder(orderId))
+			.isInstanceOf(OrderCannotBeCanceledException.class);
+
+		then(orderRepository).should(never())
+			.save(any(Order.class));
+		then(orderEventPublisher).should(never())
+			.publishOrderCanceled(any(OrderCanceledEvent.class));
+	}
+
 	private OrderItemRequest createOrderItemRequest(UUID productId, int quantity) {
 		return OrderItemRequest.builder()
 			.productId(productId)
@@ -153,5 +255,15 @@ class OrderServiceTest {
 			.save(any(Order.class));
 		then(orderEventPublisher).should(never())
 			.publishOrderCreated(any(OrderCreatedEvent.class));
+	}
+
+	private void setOrderStatus(Order order, OrderStatus status) {
+		try {
+			Field statusField = Order.class.getDeclaredField("status");
+			statusField.setAccessible(true);
+			statusField.set(order, status);
+		} catch (NoSuchFieldException | IllegalAccessException exception) {
+			throw new RuntimeException("Failed to set order status", exception);
+		}
 	}
 }
