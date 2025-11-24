@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.smartlogis.common.presentation.ApiResponse;
 import com.smartlogis.common.presentation.dto.PageRequest;
 import com.smartlogis.common.presentation.dto.PageResponse;
 import com.smartlogis.orderservice.TestMessageResolver;
@@ -31,7 +32,9 @@ import com.smartlogis.orderservice.domain.exception.InsufficientInventoryExcepti
 import com.smartlogis.orderservice.domain.exception.OrderCannotBeCanceledException;
 import com.smartlogis.orderservice.domain.exception.OrderNotFoundException;
 import com.smartlogis.orderservice.domain.repository.OrderRepository;
+import com.smartlogis.orderservice.infrastructure.client.CompanyClient;
 import com.smartlogis.orderservice.infrastructure.client.ProductServiceClient;
+import com.smartlogis.orderservice.infrastructure.client.dto.CompanyResponse;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckRequest;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckResponse;
 import com.smartlogis.orderservice.infrastructure.event.publisher.OrderEventPublisher;
@@ -55,6 +58,9 @@ class OrderServiceTest {
 	@Mock
 	private OrderEventPublisher orderEventPublisher;
 
+	@Mock
+	private CompanyClient companyClient;
+
 	private UUID receiptCompanyId;
 	private UUID productId1;
 	private UUID productId2;
@@ -75,6 +81,16 @@ class OrderServiceTest {
 				createOrderItemRequest(productId2, 5)
 			))
 			.build();
+
+		CompanyResponse companyResponse = new CompanyResponse(
+			receiptCompanyId,
+			"테스트 업체",
+			"서울시 강남구",
+			UUID.randomUUID(),
+			UUID.randomUUID()
+		);
+		ApiResponse<CompanyResponse> apiResponse = ApiResponse.successWithDataOnly(companyResponse);
+		lenient().when(companyClient.getCompany(any(UUID.class))).thenReturn(apiResponse);
 	}
 
 	@Test

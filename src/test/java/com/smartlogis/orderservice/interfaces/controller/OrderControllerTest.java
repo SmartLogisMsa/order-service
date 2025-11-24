@@ -162,7 +162,7 @@ class OrderControllerTest {
 			.willReturn(cancelResponse);
 
 		// when & then
-		mockMvc.perform(delete("/v1/orders/cancel/{orderId}", orderId))
+		mockMvc.perform(patch("/v1/orders/cancel/{orderId}", orderId))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.id").value(orderId.toString()))
