@@ -20,6 +20,8 @@ public class OrderCreatedEvent {
 	private UUID receiptCompanyId;
 	private List<OrderItemDetail> orderItems;
 	private String requestDetails;
+	private String address;
+	private UUID receiptUserId;
 	private LocalDateTime createdAt;
 	private String createdBy;
 
@@ -36,6 +38,24 @@ public class OrderCreatedEvent {
 			.requestDetails(order.getRequestDetails())
 			.createdAt(order.getCreatedAt())
 			.createdBy(order.getCreatedBy())
+			.build();
+	}
+
+	public static OrderCreatedEvent of(Order order, String address, UUID receiptUserId) {
+		return OrderCreatedEvent.builder()
+			.orderId(order.getId())
+			.receiptCompanyId(order.getReceiptCompanyId())
+			.orderItems(order.getOrderItems().stream()
+				.map(item -> OrderItemDetail.builder()
+					.productId(item.getProductId())
+					.quantity(item.getQuantity())
+					.build())
+				.toList())
+			.requestDetails(order.getRequestDetails())
+			.createdAt(order.getCreatedAt())
+			.createdBy(order.getCreatedBy())
+			.address(address)
+			.receiptUserId(receiptUserId)
 			.build();
 	}
 

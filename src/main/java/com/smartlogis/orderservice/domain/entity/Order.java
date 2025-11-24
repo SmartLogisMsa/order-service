@@ -48,11 +48,27 @@ public class Order extends AbstractEntity {
 	@Column(name = "request_details", length = 100)
 	private String requestDetails;
 
+	@Column(name = "orderer_id", nullable = false)
+	private UUID ordererId;
+
+	@Column(name = "orderer_name", nullable = false)
+	private String ordererName;
+
+	@Column(name = "orderer_email", nullable = false)
+	private String ordererEmail;
+
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<OrderItem> orderItems = new ArrayList<>();
 
 	@Builder
-	public static Order create(UUID receiptCompanyId, String requestDetails, List<OrderItem> orderItems) {
+	public static Order create(
+		UUID receiptCompanyId,
+		String requestDetails,
+		List<OrderItem> orderItems,
+		UUID ordererId,
+		String ordererName,
+		String ordererEmail
+	) {
 		if (orderItems == null || orderItems.isEmpty()) {
 			throw new InvalidOrderItemException(OrderMessageCode.ORDER_ITEMS_REQUIRED);
 		}
@@ -61,6 +77,9 @@ public class Order extends AbstractEntity {
 		order.status = OrderStatus.PENDING;
 		order.receiptCompanyId = receiptCompanyId;
 		order.requestDetails = requestDetails;
+		order.ordererId = ordererId;
+		order.ordererName = ordererName;
+		order.ordererEmail = ordererEmail;
 		order.orderItems = new ArrayList<>(orderItems);
 		orderItems.forEach(item -> item.setOrder(order));
 		return order;
