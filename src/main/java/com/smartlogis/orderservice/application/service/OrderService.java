@@ -42,7 +42,12 @@ public class OrderService {
 	@Transactional
 	public OrderResponse createOrder(CreateOrderRequest request) {
 		List<OrderItem> orderItems = request.getOrderItems().stream()
-			.map(itemRequest -> OrderItem.create(null, itemRequest.getProductId(), itemRequest.getQuantity()))
+			.map(itemRequest -> {
+				String productName = productServiceClient.getProduct(itemRequest.getProductId())
+					.getData()
+					.getName();
+				return OrderItem.create(null, itemRequest.getProductId(), productName, itemRequest.getQuantity());
+			})
 			.toList();
 
 		InventoryCheckRequest inventoryCheckRequest = InventoryCheckRequest.builder()
@@ -63,9 +68,15 @@ public class OrderService {
 			throw new InsufficientInventoryException(OrderMessageCode.ORDER_INSUFFICIENT_INVENTORY);
 		}
 
-		Order order = Order.create(request.getReceiptCompanyId(), request.getRequestDetails(), orderItems);
+		Order order = Order.create(
+			request.getReceiptCompanyId(),
+			request.getRequestDetails(),
+			orderItems,
+			request.getOrdererId(),
+			request.getOrdererName(),
+			request.getOrdererEmail()
+		);
 		Order savedOrder = orderRepository.save(order);
-
 
 		CompanyResponse company = companyClient.getCompany(request.getReceiptCompanyId()).getData();
 
