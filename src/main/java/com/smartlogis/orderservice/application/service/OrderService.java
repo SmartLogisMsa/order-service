@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.smartlogis.common.presentation.dto.PageRequest;
 import com.smartlogis.common.presentation.dto.PageResponse;
 import com.smartlogis.orderservice.domain.entity.Order;
@@ -21,9 +20,11 @@ import com.smartlogis.orderservice.domain.exception.OrderNotFoundException;
 import com.smartlogis.orderservice.domain.repository.OrderRepository;
 import com.smartlogis.orderservice.infrastructure.client.CompanyClient;
 import com.smartlogis.orderservice.infrastructure.client.ProductServiceClient;
+import com.smartlogis.orderservice.infrastructure.client.UserServiceClient;
 import com.smartlogis.orderservice.infrastructure.client.dto.CompanyResponse;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckRequest;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckResponse;
+import com.smartlogis.orderservice.infrastructure.client.dto.UserInfoResponse;
 import com.smartlogis.orderservice.infrastructure.event.publisher.OrderEventPublisher;
 import com.smartlogis.orderservice.interfaces.dto.request.CreateOrderRequest;
 import com.smartlogis.orderservice.interfaces.dto.response.OrderResponse;
@@ -38,16 +39,14 @@ public class OrderService {
 	private final ProductServiceClient productServiceClient;
 	private final OrderEventPublisher orderEventPublisher;
 	private final CompanyClient companyClient;
+	private final UserServiceClient userServiceClient;
 
 	@Transactional
 	public OrderResponse createOrder(CreateOrderRequest request) {
+		UserInfoResponse user = userServiceClient.getCurrentUser().getData();
+
 		List<OrderItem> orderItems = request.getOrderItems().stream()
-			.map(itemRequest -> {
-				String productName = productServiceClient.getProduct(itemRequest.getProductId())
-					.getData()
-					.getName();
-				return OrderItem.create(null, itemRequest.getProductId(), productName, itemRequest.getQuantity());
-			})
+			.map(itemRequest -> OrderItem.create(null, itemRequest.getProductId(), "", itemRequest.getQuantity()))
 			.toList();
 
 		InventoryCheckRequest inventoryCheckRequest = InventoryCheckRequest.builder()
@@ -72,9 +71,9 @@ public class OrderService {
 			request.getReceiptCompanyId(),
 			request.getRequestDetails(),
 			orderItems,
-			request.getOrdererId(),
-			request.getOrdererName(),
-			request.getOrdererEmail()
+			user.getId(),
+			user.getFullName(),
+			user.getEmail()
 		);
 		Order savedOrder = orderRepository.save(order);
 
