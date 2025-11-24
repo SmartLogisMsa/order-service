@@ -12,6 +12,6 @@ import com.smartlogis.orderservice.infrastructure.client.dto.UserInfoResponse;
 @FeignClient(name = "localhost:8082")
 public interface UserServiceClient {
 
-	@GetMapping("/v1/users/{id}")
-	ApiResponse<UserInfoResponse> getUser(@PathVariable("id") UUID id);
+	@GetMapping("/v1/users")
+	ApiResponse<UserInfoResponse> getCurrentUser();
 }
