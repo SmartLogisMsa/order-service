@@ -25,8 +25,8 @@ class OrderTest {
 		TestMessageResolver.initializeMessageResource();
 		receiptCompanyId = UUID.randomUUID();
 		orderItems = List.of(
-			OrderItem.create(null, UUID.randomUUID(), 10),
-			OrderItem.create(null, UUID.randomUUID(), 5)
+			OrderItem.create(null, UUID.randomUUID(), "상품1", 10),
+			OrderItem.create(null, UUID.randomUUID(), "상품2", 5)
 		);
 	}
 
@@ -34,7 +34,14 @@ class OrderTest {
 	@DisplayName("PENDING 상태의 주문은 취소할 수 있다")
 	void cancel_Success_WhenStatusIsPending() {
 		// given
-		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		Order order = Order.create(
+			receiptCompanyId,
+			"긴급 배송",
+			orderItems,
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 
 		// when
 		order.cancel();
@@ -47,7 +54,14 @@ class OrderTest {
 	@DisplayName("SHIPPED 상태의 주문은 취소할 수 없다")
 	void cancel_ThrowsException_WhenStatusIsShipped() {
 		// given
-		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		Order order = Order.create(
+			receiptCompanyId,
+			"긴급 배송",
+			orderItems,
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 		setOrderStatus(order, OrderStatus.SHIPPED);
 
 		// when & then
@@ -59,7 +73,14 @@ class OrderTest {
 	@DisplayName("DELIVERED 상태의 주문은 취소할 수 없다")
 	void cancel_ThrowsException_WhenStatusIsDelivered() {
 		// given
-		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		Order order = Order.create(
+			receiptCompanyId,
+			"긴급 배송",
+			orderItems,
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 		setOrderStatus(order, OrderStatus.DELIVERED);
 
 		// when & then
@@ -71,7 +92,14 @@ class OrderTest {
 	@DisplayName("CANCELED 상태의 주문은 취소할 수 없다")
 	void cancel_ThrowsException_WhenStatusIsCanceled() {
 		// given
-		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		Order order = Order.create(
+			receiptCompanyId,
+			"긴급 배송",
+			orderItems,
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 		setOrderStatus(order, OrderStatus.CANCELED);
 
 		// when & then
@@ -83,7 +111,14 @@ class OrderTest {
 	@DisplayName("주문을 논리적 삭제할 수 있다")
 	void delete_Success() {
 		// given
-		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		Order order = Order.create(
+			receiptCompanyId,
+			"긴급 배송",
+			orderItems,
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 
 		// when
 		order.delete();
@@ -97,7 +132,14 @@ class OrderTest {
 	@DisplayName("삭제된 주문은 deletedAt과 deletedBy가 설정된다")
 	void delete_SetsDeletedAtAndDeletedBy() {
 		// given
-		Order order = Order.create(receiptCompanyId, "긴급 배송", orderItems);
+		Order order = Order.create(
+			receiptCompanyId,
+			"긴급 배송",
+			orderItems,
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 		LocalDateTime beforeDelete = LocalDateTime.now();
 
 		// when

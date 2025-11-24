@@ -80,6 +80,9 @@ class OrderServiceTest {
 				createOrderItemRequest(productId1, 10),
 				createOrderItemRequest(productId2, 5)
 			))
+			.ordererId(UUID.randomUUID())
+			.ordererName("테스트 주문자")
+			.ordererEmail("test@example.com")
 			.build();
 
 		CompanyResponse companyResponse = new CompanyResponse(
@@ -91,6 +94,16 @@ class OrderServiceTest {
 		);
 		ApiResponse<CompanyResponse> apiResponse = ApiResponse.successWithDataOnly(companyResponse);
 		lenient().when(companyClient.getCompany(any(UUID.class))).thenReturn(apiResponse);
+
+		// 상품 조회 모킹
+		lenient().when(productServiceClient.getProduct(productId1))
+			.thenReturn(ApiResponse.successWithDataOnly(
+				new com.smartlogis.orderservice.infrastructure.client.dto.ProductResponse(productId1, "상품1")
+			));
+		lenient().when(productServiceClient.getProduct(productId2))
+			.thenReturn(ApiResponse.successWithDataOnly(
+				new com.smartlogis.orderservice.infrastructure.client.dto.ProductResponse(productId2, "상품2")
+			));
 	}
 
 	@Test
@@ -144,9 +157,14 @@ class OrderServiceTest {
 	void cancelOrder_Success_WhenOrderExists() {
 		// given
 		UUID orderId = UUID.randomUUID();
-		Order mockOrder = Order.create(receiptCompanyId, "테스트", List.of(
-			OrderItem.create(null, productId1, 10)
-		));
+		Order mockOrder = Order.create(
+			receiptCompanyId,
+			"테스트",
+			List.of(OrderItem.create(null, productId1, "상품1", 10)),
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 
 		given(orderRepository.findById(orderId))
 			.willReturn(Optional.of(mockOrder));
@@ -193,9 +211,14 @@ class OrderServiceTest {
 	void cancelOrder_ThrowsException_WhenOrderStatusIsShipped() {
 		// given
 		UUID orderId = UUID.randomUUID();
-		Order shippedOrder = Order.create(receiptCompanyId, "테스트", List.of(
-			OrderItem.create(null, productId1, 10)
-		));
+		Order shippedOrder = Order.create(
+			receiptCompanyId,
+			"테스트",
+			List.of(OrderItem.create(null, productId1, "상품1", 10)),
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 		setOrderStatus(shippedOrder, OrderStatus.SHIPPED);
 
 		given(orderRepository.findById(orderId))
@@ -216,9 +239,14 @@ class OrderServiceTest {
 	void cancelOrder_ThrowsException_WhenOrderStatusIsDelivered() {
 		// given
 		UUID orderId = UUID.randomUUID();
-		Order shippedOrder = Order.create(receiptCompanyId, "테스트", List.of(
-			OrderItem.create(null, productId1, 10)
-		));
+		Order shippedOrder = Order.create(
+			receiptCompanyId,
+			"테스트",
+			List.of(OrderItem.create(null, productId1, "상품1", 10)),
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 		setOrderStatus(shippedOrder, OrderStatus.DELIVERED);
 
 		given(orderRepository.findById(orderId))
@@ -239,9 +267,14 @@ class OrderServiceTest {
 	void deleteOrder_Success_WhenOrderExists() {
 		// given
 		UUID orderId = UUID.randomUUID();
-		Order mockOrder = Order.create(receiptCompanyId, "테스트", List.of(
-			OrderItem.create(null, productId1, 10)
-		));
+		Order mockOrder = Order.create(
+			receiptCompanyId,
+			"테스트",
+			List.of(OrderItem.create(null, productId1, "상품1", 10)),
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 
 		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
 			.willReturn(Optional.of(mockOrder));
@@ -292,9 +325,14 @@ class OrderServiceTest {
 	void getOrder_Success_WhenOrderExists() {
 		// given
 		UUID orderId = UUID.randomUUID();
-		Order mockOrder = Order.create(receiptCompanyId, "테스트", List.of(
-			OrderItem.create(null, productId1, 10)
-		));
+		Order mockOrder = Order.create(
+			receiptCompanyId,
+			"테스트",
+			List.of(OrderItem.create(null, productId1, "상품1", 10)),
+			UUID.randomUUID(),
+			"주문자",
+			"orderer@example.com"
+		);
 
 		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
 			.willReturn(Optional.of(mockOrder));
@@ -330,12 +368,22 @@ class OrderServiceTest {
 		// given
 		UUID companyId = UUID.randomUUID();
 
-		Order order1 = Order.create(companyId, "주문1", List.of(
-			OrderItem.create(null, productId1, 10)
-		));
-		Order order2 = Order.create(companyId, "주문2", List.of(
-			OrderItem.create(null, productId2, 5)
-		));
+		Order order1 = Order.create(
+			companyId,
+			"주문1",
+			List.of(OrderItem.create(null, productId1, "상품1", 10)),
+			UUID.randomUUID(),
+			"주문자1",
+			"orderer1@example.com"
+		);
+		Order order2 = Order.create(
+			companyId,
+			"주문2",
+			List.of(OrderItem.create(null, productId2, "상품2", 5)),
+			UUID.randomUUID(),
+			"주문자2",
+			"orderer2@example.com"
+		);
 
 		Page<Order> mockPage = new PageImpl<>(
 			List.of(order1, order2),
