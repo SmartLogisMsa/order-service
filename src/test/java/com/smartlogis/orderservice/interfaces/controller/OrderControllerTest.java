@@ -70,9 +70,6 @@ class OrderControllerTest {
 					.quantity(5)
 					.build()
 			))
-			.ordererId(UUID.randomUUID())
-			.ordererName("테스트 주문자")
-			.ordererEmail("test@example.com")
 			.build();
 
 		mockResponse = OrderResponse.builder()

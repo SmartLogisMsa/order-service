@@ -34,6 +34,7 @@ import com.smartlogis.orderservice.domain.exception.OrderNotFoundException;
 import com.smartlogis.orderservice.domain.repository.OrderRepository;
 import com.smartlogis.orderservice.infrastructure.client.CompanyClient;
 import com.smartlogis.orderservice.infrastructure.client.ProductServiceClient;
+import com.smartlogis.orderservice.infrastructure.client.UserServiceClient;
 import com.smartlogis.orderservice.infrastructure.client.dto.CompanyResponse;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckRequest;
 import com.smartlogis.orderservice.infrastructure.client.dto.InventoryCheckResponse;
@@ -61,9 +62,13 @@ class OrderServiceTest {
 	@Mock
 	private CompanyClient companyClient;
 
+	@Mock
+	private UserServiceClient userServiceClient;
+
 	private UUID receiptCompanyId;
 	private UUID productId1;
 	private UUID productId2;
+	private UUID userId;
 	private CreateOrderRequest request;
 
 	@BeforeEach
@@ -72,6 +77,7 @@ class OrderServiceTest {
 		receiptCompanyId = UUID.randomUUID();
 		productId1 = UUID.randomUUID();
 		productId2 = UUID.randomUUID();
+		userId = UUID.randomUUID();
 
 		request = CreateOrderRequest.builder()
 			.receiptCompanyId(receiptCompanyId)
@@ -80,9 +86,6 @@ class OrderServiceTest {
 				createOrderItemRequest(productId1, 10),
 				createOrderItemRequest(productId2, 5)
 			))
-			.ordererId(UUID.randomUUID())
-			.ordererName("테스트 주문자")
-			.ordererEmail("test@example.com")
 			.build();
 
 		CompanyResponse companyResponse = new CompanyResponse(
@@ -95,15 +98,16 @@ class OrderServiceTest {
 		ApiResponse<CompanyResponse> apiResponse = ApiResponse.successWithDataOnly(companyResponse);
 		lenient().when(companyClient.getCompany(any(UUID.class))).thenReturn(apiResponse);
 
-		// 상품 조회 모킹
-		lenient().when(productServiceClient.getProduct(productId1))
-			.thenReturn(ApiResponse.successWithDataOnly(
-				new com.smartlogis.orderservice.infrastructure.client.dto.ProductResponse(productId1, "상품1")
-			));
-		lenient().when(productServiceClient.getProduct(productId2))
-			.thenReturn(ApiResponse.successWithDataOnly(
-				new com.smartlogis.orderservice.infrastructure.client.dto.ProductResponse(productId2, "상품2")
-			));
+		// 사용자 정보 조회 모킹
+		com.smartlogis.orderservice.infrastructure.client.dto.UserInfoResponse userInfo =
+			com.smartlogis.orderservice.infrastructure.client.dto.UserInfoResponse.builder()
+				.id(userId)
+				.firstName("테스트")
+				.lastName("주문자")
+				.email("test@example.com")
+				.build();
+		lenient().when(userServiceClient.getCurrentUser())
+			.thenReturn(ApiResponse.successWithDataOnly(userInfo));
 	}
 
 	@Test
@@ -161,9 +165,9 @@ class OrderServiceTest {
 			receiptCompanyId,
 			"테스트",
 			List.of(OrderItem.create(null, productId1, "상품1", 10)),
-			UUID.randomUUID(),
-			"주문자",
-			"orderer@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 
 		given(orderRepository.findById(orderId))
@@ -215,9 +219,9 @@ class OrderServiceTest {
 			receiptCompanyId,
 			"테스트",
 			List.of(OrderItem.create(null, productId1, "상품1", 10)),
-			UUID.randomUUID(),
-			"주문자",
-			"orderer@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 		setOrderStatus(shippedOrder, OrderStatus.SHIPPED);
 
@@ -243,9 +247,9 @@ class OrderServiceTest {
 			receiptCompanyId,
 			"테스트",
 			List.of(OrderItem.create(null, productId1, "상품1", 10)),
-			UUID.randomUUID(),
-			"주문자",
-			"orderer@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 		setOrderStatus(shippedOrder, OrderStatus.DELIVERED);
 
@@ -271,9 +275,9 @@ class OrderServiceTest {
 			receiptCompanyId,
 			"테스트",
 			List.of(OrderItem.create(null, productId1, "상품1", 10)),
-			UUID.randomUUID(),
-			"주문자",
-			"orderer@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 
 		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
@@ -329,9 +333,9 @@ class OrderServiceTest {
 			receiptCompanyId,
 			"테스트",
 			List.of(OrderItem.create(null, productId1, "상품1", 10)),
-			UUID.randomUUID(),
-			"주문자",
-			"orderer@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 
 		given(orderRepository.findByIdAndDeletedAtIsNull(orderId))
@@ -372,17 +376,17 @@ class OrderServiceTest {
 			companyId,
 			"주문1",
 			List.of(OrderItem.create(null, productId1, "상품1", 10)),
-			UUID.randomUUID(),
-			"주문자1",
-			"orderer1@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 		Order order2 = Order.create(
 			companyId,
 			"주문2",
 			List.of(OrderItem.create(null, productId2, "상품2", 5)),
-			UUID.randomUUID(),
-			"주문자2",
-			"orderer2@example.com"
+			userId,
+			"테스트 주문자",
+			"test@example.com"
 		);
 
 		Page<Order> mockPage = new PageImpl<>(
