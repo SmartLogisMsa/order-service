@@ -34,15 +34,19 @@ public class OrderItem extends AbstractEntity {
 	@Column(name = "product_id", nullable = false)
 	private UUID productId;
 
+	@Column(name = "product_name", nullable = false)
+	private String productName;
+
 	@Column(name = "quantity", nullable = false)
 	private Integer quantity;
 
 	@Builder
-	public static OrderItem create(Order order, UUID productId, Integer quantity) {
+	public static OrderItem create(Order order, UUID productId, String productName, Integer quantity) {
 		OrderItem item = new OrderItem();
 		item.id = UUID.randomUUID();
 		item.order = order;
 		item.productId = productId;
+		item.productName = productName;
 		item.quantity = quantity;
 		return item;
 	}
