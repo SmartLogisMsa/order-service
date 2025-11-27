@@ -3,6 +3,7 @@ package com.smartlogis.orderservice.application.service;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,6 +33,7 @@ import com.smartlogis.orderservice.interfaces.dto.response.OrderResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderService {
 
@@ -82,9 +84,10 @@ public class OrderService {
 		OrderCreatedEvent event = OrderCreatedEvent.of(
 			savedOrder,
 			company.getAddress(),
-			company.getManagerId()
+			request.getUserId()
 		);
 
+        log.info(event.toString());
 		orderEventPublisher.publishOrderCreated(event);
 
 		return OrderResponse.from(savedOrder);

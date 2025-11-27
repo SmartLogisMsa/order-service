@@ -1,3 +1,5 @@
+server:
+  port: 3004
 spring:
   application:
     name: order-service
