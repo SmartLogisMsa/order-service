@@ -12,6 +12,6 @@ import com.smartlogis.orderservice.infrastructure.client.dto.CompanyResponse;
 @FeignClient(name = "company-service")
 public interface CompanyClient {
 
-	@GetMapping("/v1/companies/{id}")
+	@GetMapping("/{id}")
 	ApiResponse<CompanyResponse> getCompany(@PathVariable("id") UUID id);
 }

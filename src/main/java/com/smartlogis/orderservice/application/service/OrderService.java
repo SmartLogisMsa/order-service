@@ -58,7 +58,7 @@ public class OrderService {
 				.toList())
 			.build();
 
-		InventoryCheckResponse inventoryCheckResponse = productServiceClient.checkInventories(inventoryCheckRequest);
+		InventoryCheckResponse inventoryCheckResponse = productServiceClient.checkInventories(inventoryCheckRequest).getData();
 
 		boolean available = inventoryCheckResponse.getResults().stream()
 			.allMatch(InventoryCheckResponse.InventoryCheckResult::getAvailable);
