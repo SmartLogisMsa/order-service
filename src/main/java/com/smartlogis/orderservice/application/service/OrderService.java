@@ -43,7 +43,7 @@ public class OrderService {
 
 	@Transactional
 	public OrderResponse createOrder(CreateOrderRequest request) {
-		UserInfoResponse user = userServiceClient.getCurrentUser().getData();
+		UserInfoResponse user = userServiceClient.getUser(request.getUserId()).getData();
 
 		List<OrderItem> orderItems = request.getOrderItems().stream()
 			.map(itemRequest -> OrderItem.create(null, itemRequest.getProductId(), "", itemRequest.getQuantity()))
@@ -58,7 +58,7 @@ public class OrderService {
 				.toList())
 			.build();
 
-		InventoryCheckResponse inventoryCheckResponse = productServiceClient.checkInventories(inventoryCheckRequest);
+		InventoryCheckResponse inventoryCheckResponse = productServiceClient.checkInventories(inventoryCheckRequest).getData();
 
 		boolean available = inventoryCheckResponse.getResults().stream()
 			.allMatch(InventoryCheckResponse.InventoryCheckResult::getAvailable);
